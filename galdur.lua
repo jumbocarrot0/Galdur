@@ -31,6 +31,12 @@ SMODS.Atlas({ -- art by nekojoe
     py = 29
 })
 
+DECKS_PER_ROW = 4
+DECK_ROWS_PER_PAGE = 2 -- Does nothing atm
+DECKS_PER_PAGE = DECKS_PER_ROW * 2
+STAKES_PER_ROW = 8
+STAKE_ROWS_PER_PAGE = 3
+STAKES_PER_PAGE = STAKES_PER_ROW * STAKE_ROWS_PER_PAGE
 
 -- Function Hooks
 local card_stop_hover = Card.stop_hover
@@ -73,7 +79,7 @@ function Card:hover()
         if badges.nodes.mod_set then badges.nodes.mod_set = nil end
 
         self.config.h_popup = {n=G.UIT.C, config={align = "cm", padding=0.1}, nodes={
-            (self.params.deck_select > 6 and {n=col, config={align='cm', padding=0.1}, nodes = tooltips} or {n=G.UIT.R}),
+            (self.params.deck_select > DECKS_PER_ROW and {n=col, config={align='cm', padding=0.1}, nodes = tooltips} or {n=G.UIT.R}),
             {n=col, config={align=(self.params.deck_preview and 'bm' or 'cm')}, nodes = {
                 {n=G.UIT.C, config={align = "cm", minh = 1.5, r = 0.1, colour = G.C.L_BLACK, padding = 0.1, outline=1}, nodes={
                     {n=G.UIT.R, config={align = "cm", r = 0.1, minw = 3, maxw = 4, minh = 0.4}, nodes={
@@ -222,7 +228,7 @@ function generate_deck_card_areas()
         end
     end
     Galdur.run_setup.deck_select_areas = {}
-    for i=1, 12 do
+    for i=1, DECKS_PER_PAGE do
         Galdur.run_setup.deck_select_areas[i] = CardArea(G.ROOM.T.w,G.ROOM.T.h, G.CARD_W, G.CARD_H, 
         {card_limit = 5, type = 'deck', highlight_limit = 0, deck_height = 0.75, thin_draw = 1, deck_select = true, index = i})
     end
@@ -233,7 +239,7 @@ function generate_deck_card_areas_ui()
     local count = 1
     for i=1, 2 do
         local row = {n = G.UIT.R, config = {colour = G.C.LIGHT}, nodes = {}}
-        for j=1, 6 do
+        for j=1, DECKS_PER_ROW do
             if count > #G.P_CENTER_POOLS.Back then return end
             table.insert(row.nodes, {n = G.UIT.O, config = {object = Galdur.run_setup.deck_select_areas[count], r = 0.1, id = "deck_select_"..count}})
             count = count + 1
@@ -247,8 +253,8 @@ function generate_deck_card_areas_ui()
 end
 
 function populate_deck_card_areas(page)
-    local count = 1 + (page - 1) * 12
-    for i=1, 12 do
+    local count = 1 + (page - 1) * DECKS_PER_PAGE
+    for i=1, DECKS_PER_PAGE do
         if count > #G.P_CENTER_POOLS.Back then return end
         local card_number = Galdur.config.reduce and 1 or 10
         for index = 1, card_number do
@@ -300,8 +306,8 @@ end
 function create_deck_page_cycle()
     local options = {}
     local cycle
-    if #G.P_CENTER_POOLS.Back > 12 then
-        local total_pages = math.ceil(#G.P_CENTER_POOLS.Back / 12)
+    if #G.P_CENTER_POOLS.Back > DECKS_PER_PAGE then
+        local total_pages = math.ceil(#G.P_CENTER_POOLS.Back / DECKS_PER_PAGE)
         for i=1, total_pages do
             table.insert(options, localize('k_page')..' '..i..' / '..total_pages)
         end
@@ -337,7 +343,7 @@ function generate_stake_card_areas()
         end
     end
     Galdur.run_setup.stake_select_areas = {}
-    for i=1, 24 do
+    for i=1, STAKES_PER_PAGE do
         Galdur.run_setup.stake_select_areas[i] = CardArea(G.ROOM.T.w * 0.116, G.ROOM.T.h * 0.209, 3.4*14/41, 3.4*14/41, 
         {card_limit = 1, type = 'deck', highlight_limit = 0, stake_select = true})
     end
@@ -346,9 +352,9 @@ end
 function generate_stake_card_areas_ui()
     local stake_ui_element = {}
     local count = 1
-    for i=1, 3 do
+    for i=1, STAKE_ROWS_PER_PAGE do
         local row = {n = G.UIT.R, config = {colour = G.C.LIGHT, padding = 0.1}, nodes = {}}
-        for j=1, 8 do
+        for j=1, STAKES_PER_ROW do
             table.insert(row.nodes, {n = G.UIT.O, config = {object = Galdur.run_setup.stake_select_areas[count], r = 0.1, id = "stake_select_"..count, outline_colour = G.C.YELLOW}})
             count = count + 1
         end
@@ -393,8 +399,8 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
 end
 
 function populate_stake_card_areas(page)
-    local count = 1 + (page - 1) * 24
-    for i=1, 24 do
+    local count = 1 + (page - 1) * STAKES_PER_PAGE
+    for i=1, STAKES_PER_PAGE do
         if count > #G.P_CENTER_POOLS.Stake then return end
         local card = Card(Galdur.run_setup.stake_select_areas[i].T.x,Galdur.run_setup.stake_select_areas[i].T.y, 3.4*14/41, 3.4*14/41,
             Galdur.run_setup.choices.deck.effect.center, Galdur.run_setup.choices.deck.effect.center, {stake_chip = true, stake = count, galdur_selector = true})
@@ -439,7 +445,7 @@ end
 
 function create_stake_page_cycle()
     local options = {}
-    local total_pages = math.ceil(#G.P_CENTER_POOLS.Stake / 24)
+    local total_pages = math.ceil(#G.P_CENTER_POOLS.Stake / STAKES_PER_PAGE)
     for i=1, total_pages do
         table.insert(options, localize('k_page')..' '..i..' / '..total_pages)
     end
