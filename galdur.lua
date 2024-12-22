@@ -170,11 +170,11 @@ function Card:click()
         -- Galdur.run_setup.choices.stake = get_deck_win_stake(Galdur.run_setup.choices.deck.effect.center.key)
         Galdur.set_new_deck()
     elseif self.params.stake_chip and not self.params.stake_chip_locked then
-if Galdur.run_setup.choices.stake ~= self.params.stake then
+        if Galdur.run_setup.choices.stake ~= self.params.stake then
             local prev_stake = Galdur.run_setup.choices.stake
-        Galdur.run_setup.choices.stake = self.params.stake
+            Galdur.run_setup.choices.stake = self.params.stake
             -- G.E_MANAGER:clear_queue('galdur')
-        Galdur.populate_chip_tower(self.params.stake, false, prev_stake)
+            Galdur.populate_chip_tower(self.params.stake, false, prev_stake)
         end
     else
         card_click_ref(self)
@@ -389,7 +389,7 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
                     Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
-                    Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    Sprite.draw_self(_sprite, G.C.L_BLACK)
                     -- Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 end
@@ -398,7 +398,7 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
                     Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
-                    Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    Sprite.draw_self(_sprite, G.C.L_BLACK)
                     -- Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 end
@@ -719,7 +719,7 @@ function deck_select_page_deck()
     return 
         {n=G.UIT.ROOT, config={align = "tm", minh = 3.8, colour = G.C.CLEAR, padding=0.1}, nodes={
             {n=G.UIT.C, config = {padding = 0.15}, nodes ={   
-                generate_deck_card_areas_ui(), 
+                generate_deck_card_areas_ui(),
                 create_deck_page_cycle(),
             }},
             deck_preview
@@ -935,7 +935,7 @@ function Galdur.generate_chip_tower()
         end
     end
     -- x and y here wont really matter since they'll be placed in a UIBox
-    Galdur.run_setup.chip_tower = CardArea(G.ROOM.T.w * 0.656, G.ROOM.T.y, 3.4*14/41, 3.4*14/41, 
+    Galdur.run_setup.chip_tower = CardArea(G.ROOM.T.w * 0.656, G.ROOM.T.y, 3.4*14/41, 3.4*14/41,
         {type = 'deck', highlight_limit = 0, draw_layers = {'card'}, thin_draw = 1, stake_chips = true})
     Galdur.run_setup.chip_tower_holding = CardArea(G.ROOM.T.w * 0.656, -2*G.CARD_H, 3.4*14/41, 3.4*14/41,
         {type = 'deck', highlight_limit = 0, draw_layers = {'card'}, thin_draw = 1, stake_chips = true})
@@ -958,9 +958,9 @@ function Galdur.populate_chip_tower(_stake, silent, prev_stake)
     local last_shared_index = 0
     silent = silent or false
     if Galdur.run_setup.chip_tower.cards then
-if not prev_stake then
-        remove_all(Galdur.run_setup.chip_tower.cards)
-        Galdur.run_setup.chip_tower.cards = {}
+        if not prev_stake then
+            remove_all(Galdur.run_setup.chip_tower.cards)
+            Galdur.run_setup.chip_tower.cards = {}
         end
         remove_all(Galdur.run_setup.chip_tower_holding.cards)
         Galdur.run_setup.chip_tower_holding.cards = {}
