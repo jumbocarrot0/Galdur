@@ -355,7 +355,10 @@ end
 function generate_stake_card_areas_ui()
     local stake_ui_element = {}
     local count = 1
-    for i=1, STAKE_ROWS_PER_PAGE do
+
+    -- Assuming no row limit per page, this would be the number of rows the stakes would fill
+    local needed_rows = math.ceil(#G.P_CENTER_POOLS.Stake / STAKES_PER_ROW)
+    for i=1, math.min(needed_rows, STAKE_ROWS_PER_PAGE) do
         local row = {n = G.UIT.R, config = {colour = G.C.LIGHT, padding = 0.1}, nodes = {}}
         for j=1, STAKES_PER_ROW do
             table.insert(row.nodes, {n = G.UIT.O, config = {object = Galdur.run_setup.stake_select_areas[count], r = 0.1, id = "stake_select_"..count, outline_colour = G.C.YELLOW}})
