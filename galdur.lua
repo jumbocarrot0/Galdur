@@ -31,9 +31,9 @@ SMODS.Atlas({ -- art by nekojoe
     py = 29
 })
 
-DECKS_PER_ROW = 4
-DECK_ROWS_PER_PAGE = 2 -- Does nothing atm
-DECKS_PER_PAGE = DECKS_PER_ROW * 2
+DECKS_PER_ROW = 6
+DECK_ROWS_PER_PAGE = 2 -- Anything above 2 will be too big for the screen
+DECKS_PER_PAGE = DECKS_PER_ROW * DECK_ROWS_PER_PAGE
 STAKES_PER_ROW = 8
 STAKE_ROWS_PER_PAGE = 3
 STAKES_PER_PAGE = STAKES_PER_ROW * STAKE_ROWS_PER_PAGE
@@ -98,7 +98,7 @@ function Card:hover()
                     }},
                 }}
             }},
-            (self.params.deck_select < 7 and {n=col, config={align=(self.params.deck_preview and 'bm' or 'cm'), padding=0.1}, nodes = tooltips} or {n=G.UIT.R})
+            (self.params.deck_select <= DECKS_PER_ROW and {n=col, config={align=(self.params.deck_preview and 'bm' or 'cm'), padding=0.1}, nodes = tooltips} or {n=G.UIT.R})
             
         }}
         self.config.h_popup_config = self:align_h_popup()
@@ -237,7 +237,7 @@ end
 function generate_deck_card_areas_ui()
     local deck_ui_element = {}
     local count = 1
-    for i=1, 2 do
+    for i=1, DECK_ROWS_PER_PAGE do
         local row = {n = G.UIT.R, config = {colour = G.C.LIGHT}, nodes = {}}
         for j=1, DECKS_PER_ROW do
             if count > #G.P_CENTER_POOLS.Back then return end
