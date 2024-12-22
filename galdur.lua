@@ -67,7 +67,7 @@ function Card:hover()
             for _, center in pairs(info_queue) do
                 local desc = generate_card_ui(center, {main = {},info = {},type = {},name = 'done',badges = badges or {}}, nil, center.set, nil)
                 tooltips[#tooltips + 1] =
-                {n=info_col, config={align = "tm"}, nodes={
+                {n=info_col, config={align = (self.params.deck_select > DECKS_PER_ROW and "bm" or "tm")}, nodes={
                     {n=G.UIT.R, config={align = "cm", colour = lighten(G.C.JOKER_GREY, 0.5), r = 0.1, padding = 0.05, emboss = 0.05}, nodes={
                     info_tip_from_rows(desc.info[1], desc.info[1].name),
                     }}
