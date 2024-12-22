@@ -170,9 +170,12 @@ function Card:click()
         -- Galdur.run_setup.choices.stake = get_deck_win_stake(Galdur.run_setup.choices.deck.effect.center.key)
         Galdur.set_new_deck()
     elseif self.params.stake_chip and not self.params.stake_chip_locked then
+if Galdur.run_setup.choices.stake ~= self.params.stake then
+            local prev_stake = Galdur.run_setup.choices.stake
         Galdur.run_setup.choices.stake = self.params.stake
-        G.E_MANAGER:clear_queue('galdur')
-        Galdur.populate_chip_tower(self.params.stake)
+            -- G.E_MANAGER:clear_queue('galdur')
+        Galdur.populate_chip_tower(self.params.stake, false, prev_stake)
+        end
     else
         card_click_ref(self)
     end
@@ -683,14 +686,15 @@ G.FUNCS.random_stake = function()
         end
     end
     local selected = false
+    local prev_stake = Galdur.run_setup.choices.stake
     while not selected do
         local random = pseudorandom_element(random_stake_opts, pseudoseed(os.time()))
         selected = random_stake_opts[random]
-        if selected == Galdur.run_setup.choices.stake and #random_stake_opts > 1 then selected = false end
+        if selected == prev_stake and #random_stake_opts > 1 then selected = false end
     end
     play_sound('whoosh1', math.random()*0.2 + 0.9, 0.35)
     Galdur.run_setup.choices.stake = selected
-    Galdur.populate_chip_tower(selected)
+    Galdur.populate_chip_tower(selected, false, prev_stake)
 end
 
 function deck_select_page_deck()
@@ -923,22 +927,89 @@ function Galdur.generate_chip_tower()
             end
         end
     end
+    -- x and y here wont really matter since they'll be placed in a UIBox
     Galdur.run_setup.chip_tower = CardArea(G.ROOM.T.w * 0.656, G.ROOM.T.y, 3.4*14/41, 3.4*14/41, 
         {type = 'deck', highlight_limit = 0, draw_layers = {'card'}, thin_draw = 1, stake_chips = true})
-    Galdur.run_setup.chip_tower_holding = CardArea(G.ROOM.T.w * 0.656, G.ROOM.T.y, 3.4*14/41, 3.4*14/41, 
+    Galdur.run_setup.chip_tower_holding = CardArea(G.ROOM.T.w * 0.656, -2*G.CARD_H, 3.4*14/41, 3.4*14/41,
         {type = 'deck', highlight_limit = 0, draw_layers = {'card'}, thin_draw = 1, stake_chips = true})
 end
 
-function Galdur.populate_chip_tower(_stake, silent)
+function Galdur.populate_chip_tower(_stake, silent, prev_stake)
+    -- Failsafes to prevent buggy behaviour
+    if _stake < 1 then _stake = 1 end
+    if prev_stake == _stake then
+        return
+    end
+    if Galdur.populating_chip_tower and prev_stake then
+        Galdur.run_setup.choices.stake = prev_stake
+        return
+    end
+    Galdur.populating_chip_tower = true -- Will turn false once all events are done
+
+    local applied_stakes = order_stake_chain(SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[_stake]), _stake)
+    local prev_applied_stakes = {}
+    local last_shared_index = 0
+    silent = silent or false
     if Galdur.run_setup.chip_tower.cards then
+if not prev_stake then
         remove_all(Galdur.run_setup.chip_tower.cards)
         Galdur.run_setup.chip_tower.cards = {}
+        end
         remove_all(Galdur.run_setup.chip_tower_holding.cards)
         Galdur.run_setup.chip_tower_holding.cards = {}
     end
-    if _stake == 0 then _stake = 1 end
-    local applied_stakes = order_stake_chain(SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[_stake]), _stake)
-    for index, stake_index in ipairs(applied_stakes) do
+
+    if prev_stake then
+        prev_applied_stakes = order_stake_chain(SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[prev_stake]), prev_stake)
+        for i=1, math.min(#prev_applied_stakes, #applied_stakes) do
+            if prev_applied_stakes[i] == applied_stakes[i] then
+                last_shared_index =  last_shared_index + 1
+            else
+                break
+            end
+        end
+
+        -- Remove old stakes
+        -- Play animation if we don't need to add any new stakes after ths (not possible in vanilla)
+        -- (or if animations are off)
+        if #applied_stakes == last_shared_index and Galdur.config.animation and not silent then
+            for index=#prev_applied_stakes - last_shared_index, 1, -1 do
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.01,
+                    func = (function()
+                        if Galdur.run_setup.chip_tower.cards[1] then
+                            Galdur.run_setup.chip_tower.cards[1].ability.discarded = true
+                            play_sound('chips2', math.random() * 0.1 + (index + last_shared_index) * 0.1 + 0.6, 0.55)
+                            -- Galdur.run_setup.chip_tower.cards[index]:drag({x = 0, y = -20})
+                            Galdur.run_setup.chip_tower_holding:draw_card_from(Galdur.run_setup.chip_tower, nil, true)
+                        end
+                        return true
+                    end)
+                }), 'galdur')
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.01,
+                    func = (function()
+                        remove_all(Galdur.run_setup.chip_tower_holding.cards)
+                        Galdur.run_setup.chip_tower_holding.cards = {}
+                        if #Galdur.run_setup.chip_tower.cards <= #applied_stakes then
+                            Galdur.populating_chip_tower = false
+                        end
+                        return true
+                    end)
+                }), 'galdur')
+            end
+        else
+            for i=#prev_applied_stakes - last_shared_index, 1, -1 do
+                table.remove(Galdur.run_setup.chip_tower.cards, i)
+            end
+        end
+    end
+    for index = last_shared_index + 1, #applied_stakes do
+        local stake_index = applied_stakes[index]
+    -- for index, stake_index in ipairs(applied_stakes) do
+        -- if index > last_shared_index then
         local card = Card(Galdur.run_setup.chip_tower.T.x, G.ROOM.T.y, 3.4*14/41, 3.4*14/41,
             Galdur.run_setup.choices.deck.effect.center, Galdur.run_setup.choices.deck.effect.center,
             {hover = #applied_stakes - index, stake = stake_index, stake_chip = true, chip_tower = true, galdur_selector = true})
@@ -951,20 +1022,37 @@ function Galdur.populate_chip_tower(_stake, silent)
         card.children.back.states.click = card.states.click
         card.children.back.states.drag = card.states.drag
         card.children.back.states.collide.can = true
+        card.children.back.states.visible = false -- necessary to hide gold stake shader
         card.children.back:set_role({major = card, role_type = 'Glued', draw_major = card})
         if Galdur.config.animation and not silent then
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.02,
                 func = (function()
-                    play_sound('chips2', math.random()*0.2 + 0.9, 0.35)
+                    card.children.back.states.visible = true
+                    play_sound('chips2', math.random() * 0.1 + 0.1 * index + 0.7, 0.55)
                     if Galdur.run_setup.chip_tower.cards then Galdur.run_setup.chip_tower:draw_card_from(Galdur.run_setup.chip_tower_holding) end
+                    if #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
+                        Galdur.populating_chip_tower = false
+                    end
                     return true
                 end)
             }), 'galdur')
         else
             Galdur.run_setup.chip_tower:emplace(card)
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.01,
+                func = (function()
+                    card.children.back.states.visible = true
+                    if #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
+                        Galdur.populating_chip_tower = false
+                    end
+                    return true
+                end)
+            }), 'galdur')
         end
+        -- end
     end
 end
 
@@ -972,10 +1060,14 @@ function Galdur.display_chip_tower()
     return
     {n=G.UIT.C, config = {align = "tm", padding = 0.15}, nodes ={
         {n = G.UIT.C, config = {minh = 5.95, minw = 1.5, maxw = 1.5, colour = G.C.BLACK, r=0.1, align = "bm", padding = 0.15, emboss=0.05}, nodes = {
-            {n=G.UIT.R, config={align = "cm"}, nodes={
-                {n = G.UIT.O, config = {object = Galdur.run_setup.chip_tower}}
-            }}
-        }}
+            -- Setting holding node to zero to not extend intended height of parent node
+            {n = G.UIT.R, config = {align="tm", h=0}, nodes = {
+                {n = G.UIT.O, config = {object = Galdur.run_setup.chip_tower_holding, h=0}},
+            }},
+            {n = G.UIT.R, config = {minh = 5.2, align="bm"}, nodes = {
+                {n = G.UIT.O, config = {object = Galdur.run_setup.chip_tower}},
+            }},
+        }},
     }}
 end
 
