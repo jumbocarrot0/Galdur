@@ -390,6 +390,8 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
                     Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    -- Sprite.draw_shader(_sprite, 'dissolve')
+                    Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 end
             else
                 if Galdur.config.stake_colour == 2 then
@@ -397,6 +399,8 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
                     Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    -- Sprite.draw_shader(_sprite, 'dissolve')
+                    Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 end
             end
         end
