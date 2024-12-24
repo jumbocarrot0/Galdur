@@ -67,7 +67,7 @@ function Card:hover()
             for _, center in pairs(info_queue) do
                 local desc = generate_card_ui(center, {main = {},info = {},type = {},name = 'done',badges = badges or {}}, nil, center.set, nil)
                 tooltips[#tooltips + 1] =
-                {n=info_col, config={align = (self.params.deck_select > DECKS_PER_ROW and "bm" or "tm")}, nodes={
+                {n=info_col, config={align = (self.params.deck_preview and 'tr') or (self.params.deck_select > DECKS_PER_ROW and "bm" or "tm")}, nodes={
                     {n=G.UIT.R, config={align = "cm", colour = lighten(G.C.JOKER_GREY, 0.5), r = 0.1, padding = 0.05, emboss = 0.05}, nodes={
                     info_tip_from_rows(desc.info[1], desc.info[1].name),
                     }}
@@ -389,18 +389,16 @@ function get_stake_sprite_in_area(_stake, _scale, _area)
                     Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
-                    Sprite.draw_self(_sprite, G.C.L_BLACK)
-                    -- Sprite.draw_shader(_sprite, 'dissolve')
-                    Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
+                    Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    Sprite.draw_shader(_sprite, 'negative_shine', nil, _sprite.ARGS.send_to_shader)
                 end
             else
                 if Galdur.config.stake_colour == 2 then
                     Sprite.draw_shader(_sprite, 'dissolve')
                     Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
                 else
-                    Sprite.draw_self(_sprite, G.C.L_BLACK)
-                    -- Sprite.draw_shader(_sprite, 'dissolve')
-                    Sprite.draw_shader(_sprite, 'voucher', nil, _sprite.ARGS.send_to_shader)
+                    Sprite.draw_self(_sprite, G.C.L_BLACK) 
+                    Sprite.draw_shader(_sprite, 'negative_shine', nil, _sprite.ARGS.send_to_shader)
                 end
             end
         end
@@ -911,7 +909,7 @@ function Galdur.populate_deck_preview(_deck, silent)
     Galdur.run_setup.selected_deck_height = Galdur.config.reduce and 1 or _deck.effect.center.galdur_height or 52
     for index = 1, Galdur.run_setup.selected_deck_height do
         local card = Card(Galdur.run_setup.selected_deck_area.T.x+2*G.CARD_W, -2*G.CARD_H, G.CARD_W, G.CARD_H,
-            _deck.effect.center, _deck.effect.center, {galdur_back = _deck, deck_select = 1, deck_preview = true})
+            _deck.effect.center, _deck.effect.center, {galdur_back = _deck, deck_select = 7, deck_preview = true})
         if Galdur.config.animation and not silent then Galdur.run_setup.selected_deck_area_holding:emplace(card) end
         card.sprite_facing = 'back'
         card.facing = 'back'
