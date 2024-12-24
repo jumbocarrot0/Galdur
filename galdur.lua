@@ -776,6 +776,8 @@ end
 
 Galdur.include_chip_tower = function(animate)
     Galdur.generate_chip_tower()
+    G.E_MANAGER:clear_queue('galdur')
+    Galdur.populating_chip_tower = false
     Galdur.populate_chip_tower(Galdur.run_setup.choices.stake, not animate)
 end
 
@@ -985,7 +987,7 @@ function Galdur.populate_chip_tower(_stake, silent, prev_stake)
                     trigger = 'after',
                     delay = 0.01,
                     func = (function()
-                        if Galdur.run_setup.chip_tower.cards[1] then
+                        if Galdur.run_setup.chip_tower.cards and Galdur.run_setup.chip_tower.cards[1] then
                             Galdur.run_setup.chip_tower.cards[1].ability.discarded = true
                             play_sound('chips2', math.random() * 0.1 + (index + last_shared_index) * 0.1 + 0.6, 0.55)
                             -- Galdur.run_setup.chip_tower.cards[index]:drag({x = 0, y = -20})
@@ -1000,7 +1002,7 @@ function Galdur.populate_chip_tower(_stake, silent, prev_stake)
                     func = (function()
                         remove_all(Galdur.run_setup.chip_tower_holding.cards)
                         Galdur.run_setup.chip_tower_holding.cards = {}
-                        if #Galdur.run_setup.chip_tower.cards <= #applied_stakes then
+                        if Galdur.run_setup.chip_tower.cards and #Galdur.run_setup.chip_tower.cards <= #applied_stakes then
                             Galdur.populating_chip_tower = false
                         end
                         return true
@@ -1038,9 +1040,11 @@ function Galdur.populate_chip_tower(_stake, silent, prev_stake)
                 func = (function()
                     card.children.back.states.visible = true
                     play_sound('chips2', math.random() * 0.1 + 0.1 * index + 0.7, 0.55)
-                    if Galdur.run_setup.chip_tower.cards then Galdur.run_setup.chip_tower:draw_card_from(Galdur.run_setup.chip_tower_holding) end
-                    if #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
-                        Galdur.populating_chip_tower = false
+                    if Galdur.run_setup.chip_tower.cards then 
+                        Galdur.run_setup.chip_tower:draw_card_from(Galdur.run_setup.chip_tower_holding) 
+                        if #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
+                            Galdur.populating_chip_tower = false
+                        end
                     end
                     return true
                 end)
@@ -1052,7 +1056,7 @@ function Galdur.populate_chip_tower(_stake, silent, prev_stake)
                 delay = 0.01,
                 func = (function()
                     card.children.back.states.visible = true
-                    if #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
+                    if Galdur.run_setup.chip_tower.cards and #Galdur.run_setup.chip_tower.cards >= #applied_stakes then
                         Galdur.populating_chip_tower = false
                     end
                     return true
